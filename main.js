@@ -7,6 +7,35 @@ const mongodb = require("mongodb");
 const MongoClient = mongodb.MongoClient;
 
 
+async function main() {
+  const numFiles = 1000000;
+  const folder1 = "D:\\1";
+  const folder2 = "D:\\2";
+
+  await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
+  console.log("Files created successfully!");
+
+  const result = await compareFiles(folder1, folder2);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
+
+
+  await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
+  console.log("Files created successfully!");
+
+  const result_compare = await compareFiles(folder1, folder2);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
+
+  if (Array.isArray(result_compare.uniqueNames1)) {
+    await storeFileNamesInDb(folder1, result_compare.uniqueNames1);
+  }
+
+  if (Array.isArray(result_compare.uniqueNames2)) {
+    await storeFileNamesInDb(folder2, result_compare.uniqueNames2);
+  }
+}
+
 async function storeFileNamesInDb(folderName, fileNames) {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
   try {
@@ -69,35 +98,6 @@ async function compareFiles(folder1, folder2) {
   } catch (error) {
     console.error(error);
     return {};
-  }
-}
-
-async function main() {
-  const numFiles = 1000000;
-  const folder1 = "D:\\1";
-  const folder2 = "D:\\2";
-
-  await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
-  console.log("Files created successfully!");
-
-  const result = await compareFiles(folder1, folder2);
-  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
-  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
-
-
-  await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
-  console.log("Files created successfully!");
-
-  const result_compare = await compareFiles(folder1, folder2);
-  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
-  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
-
-  if (Array.isArray(result_compare.uniqueNames1)) {
-    await storeFileNamesInDb(folder1, result_compare.uniqueNames1);
-  }
-
-  if (Array.isArray(result_compare.uniqueNames2)) {
-    await storeFileNamesInDb(folder2, result_compare.uniqueNames2);
   }
 }
 
