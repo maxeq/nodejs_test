@@ -8,23 +8,28 @@ const MongoClient = mongodb.MongoClient;
 
 async function storeFileNamesInDb(folderName, fileNames) {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
-  await client.connect();
+  try {
+    await client.connect();
 
-  const db = client.db("folders");
-  const collection = db.collection(folderName);
+    const db = client.db("folders");
+    const collection = db.collection(folderName);
 
-  for (let fileName of fileNames) {
-    const existingFile = await collection.findOne({ name: fileName });
-    if (!existingFile) {
-      const file = {
-        folder: folderName,
-        name: fileName
-      };
-      await collection.insertOne(file);
+    for (const fileName of fileNames) {
+      const existingFile = await collection.findOne({ name: fileName });
+      if (!existingFile) {
+        const file = {
+          folder: folderName,
+          name: fileName
+        };
+        await collection.insertOne(file);
+      }
     }
+    console.log(`Filename stored: ${fileNames}, Stored total: ${fileNames.length}`);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
   }
-  await console.log(`Filename stored: ${fileNames}, Stored total: ${fileNames.length}`);
-  await client.close();
 }
 
 async function createFiles(folder, numFiles) {
@@ -41,33 +46,29 @@ async function createFiles(folder, numFiles) {
 }
 
 async function compareFiles(folder1, folder2) {
-  return new Promise((resolve, reject) => {
-    try {
-      const uniqueNames1 = [];
-      const uniqueNames2 = [];
-      const fileNames1 = fs.readdirSync(folder1);
-      const fileNames2 = fs.readdirSync(folder2);
+  try {
+    const uniqueNames1 = [];
+    const uniqueNames2 = [];
+    const fileNames1 = await readdir(folder1);
+    const fileNames2 = await readdir(folder2);
 
-      fileNames1.forEach((fileName1) => {
-        if (!fileNames2.includes(fileName1)) {
-          uniqueNames1.push(fileName1);
-        }
-      });
-
-      fileNames2.forEach((fileName2) => {
-        if (!fileNames1.includes(fileName2)) {
-          uniqueNames2.push(fileName2);
-        }
-      });
-
-      resolve({
-        uniqueNames1,
-        uniqueNames2,
-      });
-    } catch (error) {
-      reject(error);
+    for (const fileName1 of fileNames1) {
+      if (!fileNames2.includes(fileName1)) {
+        uniqueNames1.push(fileName1);
+      }
     }
-  });
+
+    for (const fileName2 of fileNames2) {
+      if (!fileNames1.includes(fileName2)) {
+        uniqueNames2.push(fileName2);
+      }
+    }
+
+    return { uniqueNames1, uniqueNames2 };
+  } catch (error) {
+    console.error(error);
+    return {};
+  }
 }
 
 async function main() {
@@ -79,15 +80,23 @@ async function main() {
   console.log("Files created successfully!");
 
   const result = await compareFiles(folder1, folder2);
-  console.log(`Number of unique names in folder1 ${folder1}: ${result.uniqueNames1.length}`);
-  console.log(`Number of unique names in folder2 ${folder2}: ${result.uniqueNames2.length}`);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
 
-  if (Array.isArray(result.uniqueNames1)) {
-    await storeFileNamesInDb(folder1, result.uniqueNames1);
+
+  await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
+  console.log("Files created successfully!");
+
+  const result_compare = await compareFiles(folder1, folder2);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
+
+  if (Array.isArray(result_compare.uniqueNames1)) {
+    await storeFileNamesInDb(folder1, result_compare.uniqueNames1);
   }
 
-  if (Array.isArray(result.uniqueNames2)) {
-    await storeFileNamesInDb(folder2, result.uniqueNames2);
+  if (Array.isArray(result_compare.uniqueNames2)) {
+    await storeFileNamesInDb(folder2, result_compare.uniqueNames2);
   }
 }
 
