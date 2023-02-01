@@ -5,10 +5,11 @@ const readdir = promisify(fs.readdir);
 
 const mongodb = require("mongodb");
 const MongoClient = mongodb.MongoClient;
+const database_key = 'mongodb+srv://max:mongodb123@cluster0.1wqymwd.mongodb.net/test'
 
 
 async function main() {
-  const numFiles = 1000000;
+  const numFiles = 100;
   const folder1 = "D:\\1";
   const folder2 = "D:\\2";
 
@@ -16,49 +17,23 @@ async function main() {
   console.log("Files created successfully!");
 
   const result = await compareFiles(folder1, folder2);
-  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
-  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result.uniqueNames2.length}`);
 
 
   await Promise.all([createFiles(folder1, numFiles), createFiles(folder2, numFiles)]);
   console.log("Files created successfully!");
 
   const result_compare = await compareFiles(folder1, folder2);
-  console.log(`Number of unique names in folder1 ${folder1}: ${result_compare.uniqueNames1.length}`);
-  console.log(`Number of unique names in folder2 ${folder2}: ${result_compare.uniqueNames2.length}`);
+  console.log(`Number of unique names in folder1 ${folder1}: ${result.uniqueNames1.length}`);
+  console.log(`Number of unique names in folder2 ${folder2}: ${result.uniqueNames2.length}`);
 
-  if (Array.isArray(result_compare.uniqueNames1)) {
+  if (Array.isArray(result.uniqueNames1)) {
     await storeFileNamesInDb(folder1, result_compare.uniqueNames1);
   }
 
-  if (Array.isArray(result_compare.uniqueNames2)) {
+  if (Array.isArray(result.uniqueNames2)) {
     await storeFileNamesInDb(folder2, result_compare.uniqueNames2);
-  }
-}
-
-async function storeFileNamesInDb(folderName, fileNames) {
-  const client = new MongoClient(database_key, { useUnifiedTopology: true });
-  try {
-    await client.connect();
-
-    const db = client.db("folders");
-    const collection = db.collection(folderName);
-
-    for (const fileName of fileNames) {
-      const existingFile = await collection.findOne({ name: fileName });
-      if (!existingFile) {
-        const file = {
-          folder: folderName,
-          name: fileName
-        };
-        await collection.insertOne(file);
-      }
-    }
-    console.log(`Filename stored: ${fileNames}, Stored total: ${fileNames.length}`);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    await client.close();
   }
 }
 
@@ -98,6 +73,32 @@ async function compareFiles(folder1, folder2) {
   } catch (error) {
     console.error(error);
     return {};
+  }
+}
+
+async function storeFileNamesInDb(folderName, fileNames) {
+  const client = new MongoClient(database_key, { useUnifiedTopology: true });
+  try {
+    await client.connect();
+
+    const db = client.db("folders");
+    const collection = db.collection(folderName);
+
+    for (const fileName of fileNames) {
+      const existingFile = await collection.findOne({ name: fileName });
+      if (!existingFile) {
+        const file = {
+          folder: folderName,
+          name: fileName
+        };
+        await collection.insertOne(file);
+      }
+    }
+    console.log(`Filename stored: ${fileNames}, Stored total: ${fileNames.length}`);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
   }
 }
 
