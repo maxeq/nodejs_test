@@ -5,7 +5,6 @@ const readdir = promisify(fs.readdir);
 
 const mongodb = require("mongodb");
 const MongoClient = mongodb.MongoClient;
-const database_key = 'mongodb+srv://max:mongodb123@cluster0.1wqymwd.mongodb.net/test'
 
 
 async function main() {
