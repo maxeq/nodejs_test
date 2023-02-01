@@ -6,6 +6,7 @@ const readdir = promisify(fs.readdir);
 const mongodb = require("mongodb");
 const MongoClient = mongodb.MongoClient;
 
+
 async function storeFileNamesInDb(folderName, fileNames) {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
   try {
@@ -72,7 +73,7 @@ async function compareFiles(folder1, folder2) {
 }
 
 async function main() {
-  const numFiles = 10000000;
+  const numFiles = 1000000;
   const folder1 = "D:\\1";
   const folder2 = "D:\\2";
 
@@ -100,60 +101,33 @@ async function main() {
   }
 }
 
-const checkFiles = async () => {
-  const filePath = "D:\\2\\file_names.txt";
-  const client = new MongoClient(database_key, { useUnifiedTopology: true });
-  await client.connect();
-
-  const db = client.db("folders");
-  const collection = db.collection("folders");
-
-  const fileNames = fs.readFileSync(filePath, "utf8").split("\n");
-
-  let folderAMatches = 0;
-  let folderBMatches = 0;
-
-  for (let fileName of fileNames) {
-    const file = await collection.findOne({ name: fileName });
-    console.log(`Checking file: ${fileName}`);
-
-    if (file) {
-      console.log(`File found in folder: ${file.folder}`);
-      if (file.folder === "D:\1") {
-        folderAMatches++;
-      } else if (file.folder === "D:\2") {
-        folderBMatches++;
-      }
-    }
-  }
-
-  console.log(`folder A has ${folderAMatches} matches.`);
-  console.log(`folder B has ${folderBMatches} matches.`);
-
-  await client.close();
-};
-
 const listFilesinDB = async () => {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
-  await client.connect();
-  const db = client.db('folders');
-  const collections = await db.listCollections().toArray();
-  const collectionNames = collections.map(collection => collection.name);
-  const filenames = [];
-  const countPerCollection = {};
-  for (const collectionName of collectionNames) {
-    const collection = db.collection(collectionName);
-    const count = await collection.countDocuments();
-    countPerCollection[collectionName] = count;
-    const documents = await collection.find({}).toArray();
-    for (const document of documents) {
-      filenames.push(document.name);
+
+  try {
+    await client.connect();
+    const db = client.db('folders');
+    const collections = await db.listCollections().toArray();
+    const collectionNames = collections.map(collection => collection.name);
+    const filenames = [];
+    const countPerCollection = {};
+    for (const collectionName of collectionNames) {
+      const collection = db.collection(collectionName);
+      const count = await collection.countDocuments();
+      countPerCollection[collectionName] = count;
+      const documents = await collection.find({}).toArray();
+      for (const document of documents) {
+        filenames.push(document.name);
+      }
     }
+    console.log("File names: ", filenames);
+    console.log("Files count per collection: ", countPerCollection);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
   }
-  console.log("File names: ", filenames);
-  console.log("Files count per collection: ", countPerCollection);
-  await client.close();
-}
+};
 
 async function removeFilesFromDb(filePath) {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
