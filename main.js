@@ -9,7 +9,7 @@ const database_key = 'mongodb+srv://max:mongodb123@cluster0.1wqymwd.mongodb.net/
 
 
 async function main() {
-  const numFiles = 100;
+  const numFiles = 1000000;
   const folder1 = "D:\\1";
   const folder2 = "D:\\2";
 
