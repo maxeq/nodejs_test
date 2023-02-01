@@ -1,0 +1,27 @@
+{
+  "name": "nodejst_test",
+  "version": "1.0.0",
+  "description": "this is a test task for trainee/junior position",
+  "main": "main.js",
+  "dependencies": {
+    "bson": "^5.0.0",
+    "memory-pager": "^1.5.0",
+    "ip": "^2.0.0",
+    "mongodb-connection-string-url": "^2.6.0",
+    "punycode": "^2.3.0",
+    "saslprep": "^1.0.3",
+    "mongodb": "^5.0.0",
+    "socks": "^2.7.1",
+    "smart-buffer": "^4.2.0",
+    "sparse-bitfield": "^3.0.3",
+    "tr46": "^3.0.0",
+    "webidl-conversions": "^7.0.0",
+    "whatwg-url": "^11.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "run main()"
+  },
+  "author": "maxonx",
+  "license": "ISC"
+}
