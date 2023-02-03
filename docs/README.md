@@ -36,7 +36,7 @@ _____________
 
 3) нужно имена всех уникальных файлов положить в базу с учетом папки в которой они находится. (mongoDB, mysql, postgre) 
 
-<h3>Run function from storeFilesInDb:</h3>
+<h3>Run function from storeFilesInDb.js:</h3>
 
 ``storeFilesInDb('folderPath/fileName.json');``
 _____________
@@ -46,13 +46,13 @@ _____________
 в папке А  124125 сопадений
 в папке Б 63131 совпадений
 
-<h3>Run function from listFilesinDB.json:</h3>
+<h3>Run function from listFilesinDB.js:</h3>
 
 ``listFilesinDB('folderPath/fileName.json');``
 _____________
 
 5) есть файл с 100 000 строк, он хранит имена файлов из папок, нужно прочитать файл и удалить из базы все записи (файлов) указанные в прочитанном файле
 
-<h3>Run function from removeFilesFromDb.json:</h3>
+<h3>Run function from removeFilesFromDb.js:</h3>
 
 ``removeFilesFromDb(folderPath/fileName.json)``
