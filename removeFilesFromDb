@@ -1,0 +1,30 @@
+require("./access.js");
+const fs = require("fs");
+const { promisify } = require("util");
+const writeFile = promisify(fs.writeFile);
+const readdir = promisify(fs.readdir);
+
+const mongodb = require("mongodb");
+const MongoClient = mongodb.MongoClient;
+
+
+async function removeFilesFromDb(filePath) {
+  const client = new MongoClient(database_key, { useUnifiedTopology: true });
+  await client.connect();
+  const db = client.db('file_data');
+  const fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const fileNames = fileData.map(file => file.fileName);
+
+  const collections = await db.listCollections().toArray();
+  for (const collection of collections) {
+    const coll = db.collection(collection.name);
+    for (const fileName of fileNames) {
+      const result = await coll.deleteMany({ fileName: fileName });
+    console.log(`Deleted ${result.deletedCount} file(s) from collection ${collection.name}`);
+    }
+  }
+
+  await client.close();
+}
+
+removeFilesFromDb('D:\\output\\results.json').catch(error => console.error(error));

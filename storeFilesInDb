@@ -1,0 +1,31 @@
+require("./access.js");
+const fs = require('fs');
+const MongoClient = require('mongodb').MongoClient;
+
+async function storeFilesInDb(filePath) {
+  let client;
+  try {
+    const fileData = fs.readFileSync(filePath, 'utf8');
+    const files = JSON.parse(fileData);
+    client = new MongoClient(database_key, { useUnifiedTopology: true });
+    await client.connect();
+
+    const db = client.db("file_data");
+    for (const file of files) {
+      const collection = db.collection(file.folder);
+      const existingFile = await collection.findOne({ fileName: file.fileName });
+      if (!existingFile) {
+        await collection.insertOne({ fileName: file.fileName });
+      }
+      console.log(`files stored! folder:${file.folder}, filename:${file.fileName}`);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
+}
+
+storeFilesInDb('D:\\output\\results.json');
