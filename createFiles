@@ -1,41 +1,63 @@
 const fs = require("fs");
-const { promisify } = require("util");
-const writeFile = promisify(fs.writeFile);
+const { Readable, Writable } = require("stream");
 
 async function createFolders(folder1, folder2, numFilesSame, numFilesDifferent) {
-  // Create folder1 if it doesn't exist
-  if (!fs.existsSync(folder1)) {
-    fs.mkdirSync(folder1);
-  }
-  // Create folder2 if it doesn't exist
-  if (!fs.existsSync(folder2)) {
-    fs.mkdirSync(folder2);
-  }
+  try {
+    // Create folder1 if it doesn't exist
+    if (!fs.existsSync(folder1)) {
+      fs.mkdirSync(folder1);
+    }
+    // Create folder2 if it doesn't exist
+    if (!fs.existsSync(folder2)) {
+      fs.mkdirSync(folder2);
+    }
 
-  // Create files with the same names in both folders
-  for (let i = 0; i < numFilesSame; i++) {
-    const filePath1 = `${folder1}/file-${i}.txt`;
-    const filePath2 = `${folder2}/file-${i}.txt`;
-    if (!fs.existsSync(filePath1)) {
-      await writeFile(filePath1, "This is a text file");
-    }
-    if (!fs.existsSync(filePath2)) {
-      await writeFile(filePath2, "This is a text file");
-    }
-  }
+    const data = "This is a text file";
+    const dataStream = new Readable({
+      read() {
+        this.push(data);
+        this.push(null);
+      },
+    });
 
-  // Create files with different names in both folders
-  for (let i = numFilesSame; i < numFilesSame + numFilesDifferent; i++) {
-    const filePath1 = `${folder1}/file-${i}.txt`;
-    const filePath2 = `${folder2}/file-${i + numFilesDifferent}.txt`;
-    if (!fs.existsSync(filePath1)) {
-      await writeFile(filePath1, "This is a text file");
+    // Create files with the same names in both folders
+    for (let i = 0; i < numFilesSame; i++) {
+      const filePath1 = `${folder1}/file-${i}.txt`;
+      const filePath2 = `${folder2}/file-${i}.txt`;
+      await new Promise((resolve, reject) => {
+        dataStream
+          .pipe(fs.createWriteStream(filePath1))
+          .on("finish", resolve)
+          .on("error", reject);
+      });
+      await new Promise((resolve, reject) => {
+        dataStream
+          .pipe(fs.createWriteStream(filePath2))
+          .on("finish", resolve)
+          .on("error", reject);
+      });
     }
-    if (!fs.existsSync(filePath2)) {
-      await writeFile(filePath2, "This is a text file");
+
+    // Create files with different names in both folders
+    for (let i = numFilesSame; i < numFilesSame + numFilesDifferent; i++) {
+      const filePath1 = `${folder1}/file-${i}.txt`;
+      const filePath2 = `${folder2}/file-${i + numFilesDifferent}.txt`;
+      await new Promise((resolve, reject) => {
+        dataStream
+          .pipe(fs.createWriteStream(filePath1))
+          .on("finish", resolve)
+          .on("error", reject);
+      });
+      await new Promise((resolve, reject) => {
+        dataStream
+          .pipe(fs.createWriteStream(filePath2))
+          .on("finish", resolve)
+          .on("error", reject);
+      });
     }
+  } catch (err) {
+    console.error(err);
   }
 }
 
-//createFolders(folder1, folder2, numFilesSame, numFilesDifferent);
 createFolders("D:\\1", "D:\\2", 10, 5);
