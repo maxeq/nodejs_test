@@ -1,44 +1,47 @@
 require("./access.js");
-const fs = require('fs');
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const fs = require("fs");
+const uri = database_key;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-const listFilesinDB = async (jsonFile) => {
-  let client;
+async function listFilesinDB(jsonFile) {
   let fileData;
   let jsonFiles = [];
   let totalSameFiles = 0;
   try {
-    fileData = fs.readFileSync(jsonFile, 'utf8');
-    jsonFiles = JSON.parse(fileData).map(file => file.fileName);
-    client = new MongoClient(database_key, { useUnifiedTopology: true });
     await client.connect();
     const db = client.db('file_data');
+    fileData = fs.readFileSync(jsonFile, 'utf8');
+    jsonFiles = JSON.parse(fileData).map(file => file.fileName);
     const collections = await db.listCollections().toArray();
     const collectionNames = collections.map(collection => collection.name);
     let filenames = [];
     const countPerCollection = {};
+
     for (const collectionName of collectionNames) {
       filenames = [];
       const collection = db.collection(collectionName);
       const count = await collection.countDocuments();
       countPerCollection[collectionName] = count;
-      const documents = await collection.find({}).toArray();
-      for (const document of documents) {
-        filenames.push(document.fileName);
-      }
-      const sameFilesInCollection = filenames.filter(file => jsonFiles.includes(file)).length;
-      totalSameFiles += sameFilesInCollection;
-      console.log(`Same files as in json in ${collectionName}: ${sameFilesInCollection}`);
+
+      // Create a change stream to stream updates in real-time
+      const changeStream = collection.watch();
+      changeStream.on("change", (change) => {
+        if (change.operationType === "insert") {
+          filenames.push(change.fullDocument.fileName);
+          const sameFilesInCollection = filenames.filter(file => jsonFiles.includes(file)).length;
+          totalSameFiles += sameFilesInCollection;
+          console.log(`Same files as in json in ${collectionName}: ${sameFilesInCollection}`);
+        }
+      });
     }
-    console.log(`Total same files as in json: ${totalSameFiles}`);
     console.log("Files count per collection: ", countPerCollection);
   } catch (error) {
     console.error(error);
   } finally {
     if (client) {
-      await client.close();
     }
   }
-};
+}
 
 listFilesinDB('D:\\output\\results.json').catch(error => console.error(error));
