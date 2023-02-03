@@ -11,15 +11,31 @@ async function storeFilesInDb(filePath) {
     await client.connect();
 
     const db = client.db("file_data");
+    let files = [];
+    let currentFolder;
+
     const writeStream = new Transform({
       objectMode: true,
       async transform(file, encoding, callback) {
-        const collection = db.collection(file.folder);
-        const existingFile = await collection.findOne({ fileName: file.fileName });
-        if (!existingFile) {
-          await collection.insertOne({ fileName: file.fileName });
+        files.push({ fileName: file.fileName });
+        currentFolder = file.folder;
+        if (files.length === 1000) {
+          const collection = db.collection(currentFolder);
+          await collection.insertMany(files);
+          console.log(`1000 files stored! folder:${currentFolder}`);
+          console.log(`Total files stored: ${await collection.countDocuments()}`)
+          files = [];
         }
-        console.log(`files stored! folder:${file.folder}, filename:${file.fileName}`);
+        callback();
+      },
+      async flush(callback) {
+        if (files.length === 0) {
+          callback();
+          return;
+        }
+        const collection = db.collection(currentFolder);
+        await collection.insertMany(files);
+        console.log(`Remaining files stored! folder:${currentFolder}`);
         console.log(`Total files stored: ${await collection.countDocuments()}`)
         callback();
       },
