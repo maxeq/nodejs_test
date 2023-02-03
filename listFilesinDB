@@ -1,6 +1,7 @@
-require("./access.js");
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const fs = require("fs");
+const { MongoClient, ServerApiVersion } = require('mongodb');
+
+require("./access.js");
 const uri = database_key;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -18,29 +19,26 @@ async function listFilesinDB(jsonFile) {
     let filenames = [];
     const countPerCollection = {};
 
-    for (const collectionName of collectionNames) {
+    const sameFilesPromises = collectionNames.map(async collectionName => {
       filenames = [];
       const collection = db.collection(collectionName);
       const count = await collection.countDocuments();
       countPerCollection[collectionName] = count;
 
-      // Create a change stream to stream updates in real-time
-      const changeStream = collection.watch();
-      changeStream.on("change", (change) => {
-        if (change.operationType === "insert") {
-          filenames.push(change.fullDocument.fileName);
-          const sameFilesInCollection = filenames.filter(file => jsonFiles.includes(file)).length;
-          totalSameFiles += sameFilesInCollection;
-          console.log(`Same files as in json in ${collectionName}: ${sameFilesInCollection}`);
-        }
-      });
-    }
+      const sameFiles = await collection.find({ fileName: { $in: jsonFiles } }).toArray();
+      filenames = sameFiles.map(file => file.fileName);
+      const sameFilesInCollection = filenames.length;
+      return sameFilesInCollection;
+    });
+
+    const sameFilesCounts = await Promise.all(sameFilesPromises);
+    totalSameFiles = sameFilesCounts.reduce((acc, count) => acc + count, 0);
     console.log("Files count per collection: ", countPerCollection);
+    console.log("Total same files as in json: ", totalSameFiles);
   } catch (error) {
     console.error(error);
   } finally {
-    if (client) {
-    }
+    client.close();
   }
 }
 
