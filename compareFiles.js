@@ -67,7 +67,10 @@ async function compareFiles(folder1, folder2, outputDirectory) {
     console.log(`Unique files in folder1: ${results.filter(result => result.folder === folder1).length}`);
     console.log(`Unique files in folder2: ${results.filter(result => result.folder === folder2).length}`);
     console.log(`Total unique files: ${results.length}`);
-    
+    console.log(`Total files in folder1: ${fileNames1.length}`);
+    console.log(`Total files in folder2: ${fileNames2.length}`);
+    console.log(`Total files in all folders ${fileNames1.length + fileNames2.length}`);
+
     return results;
   } catch (error) {
     console.error(error);
