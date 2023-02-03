@@ -1,12 +1,9 @@
 require("./access.js");
 const fs = require("fs");
+const { MongoClient } = require('mongodb');
 const { promisify } = require("util");
 const writeFile = promisify(fs.writeFile);
 const readdir = promisify(fs.readdir);
-
-const mongodb = require("mongodb");
-const MongoClient = mongodb.MongoClient;
-
 
 async function removeFilesFromDb(filePath) {
   const client = new MongoClient(database_key, { useUnifiedTopology: true });
@@ -16,12 +13,18 @@ async function removeFilesFromDb(filePath) {
   const fileNames = fileData.map(file => file.fileName);
 
   const collections = await db.listCollections().toArray();
+  const bulkOps = [];
+  let coll;
   for (const collection of collections) {
-    const coll = db.collection(collection.name);
+    coll = db.collection(collection.name);
     for (const fileName of fileNames) {
-      const result = await coll.deleteMany({ fileName: fileName });
-    console.log(`Deleted ${result.deletedCount} file(s) from collection ${collection.name}`);
+      bulkOps.push({ deleteMany: { filter: { fileName: fileName } } });
     }
+  }
+
+  if (bulkOps.length > 0) {
+    const result = await coll.bulkWrite(bulkOps);
+    console.log(`Deleted ${result.deletedCount} file(s) from all collections.`);
   }
 
   await client.close();
