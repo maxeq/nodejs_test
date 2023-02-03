@@ -43,7 +43,6 @@ async function compareFiles(folder1, folder2, outputDirectory) {
     const filePath = path.join(outputDirectory, 'results.json');
     fs.writeFileSync(filePath, JSON.stringify(results, null, 2));
     return results;
-    console.log(`Results written to ${results}.`)
     
   } catch (error) {
     console.error(error);
