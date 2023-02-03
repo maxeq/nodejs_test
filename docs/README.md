@@ -53,6 +53,6 @@ _____________
 
 5) есть файл с 100 000 строк, он хранит имена файлов из папок, нужно прочитать файл и удалить из базы все записи (файлов) указанные в прочитанном файле
 
-<h3>Run function from listFilesinDB.json:</h3>
+<h3>Run function from removeFilesFromDb.json:</h3>
 
 ``removeFilesFromDb(folderPath/fileName.json)``
