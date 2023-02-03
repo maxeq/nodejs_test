@@ -55,4 +55,4 @@ _____________
 
 <h3>Run function from removeFilesFromDb.js:</h3>
 
-``removeFilesFromDb(folderPath/fileName.json)``
+``removeFilesFromDb('folderPath/fileName.json')``
