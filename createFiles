@@ -60,4 +60,4 @@ async function createFolders(folder1, folder2, numFilesSame, numFilesDifferent) 
   }
 }
 
-createFolders("D:\\1", "D:\\2", 10, 5);
+createFolders("D:\\1", "D:\\2", 5000, 5);
