@@ -1,4 +1,4 @@
-require("./access.js");
+const database_key = require("./access.js");
 const fs = require('fs');
 const { Transform } = require('stream');
 const MongoClient = require('mongodb').MongoClient;
@@ -7,7 +7,7 @@ const JSONStream = require('jsonstream');
 async function storeFilesInDb(filePath) {
   let client;
   try {
-    client = await MongoClient.connect('mongodb+srv://max:mongodb123@cluster0.1wqymwd.mongodb.net/test', { useUnifiedTopology: true });
+    client = await MongoClient.connect(database_key, { useUnifiedTopology: true });
 
     const db = client.db('data_file');
     let files = [];
