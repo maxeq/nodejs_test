@@ -9,7 +9,7 @@ async function storeFilesInDb(filePath) {
   try {
     const client = new MongoClient(database_key, { useUnifiedTopology: true });
 
-    const db = client.db('data_file');
+    const db = client.db('file_data');
     let files = [];
     let currentFolder;
 
