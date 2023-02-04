@@ -7,24 +7,27 @@ const JSONStream = require('jsonstream');
 async function storeFilesInDb(filePath) {
   let client;
   try {
-    client = new MongoClient(database_key, { useUnifiedTopology: true });
-    await client.connect();
+    client = await MongoClient.connect('mongodb+srv://max:mongodb123@cluster0.1wqymwd.mongodb.net/test', { useUnifiedTopology: true });
 
-    const db = client.db("file_data");
+    const db = client.db('data_file');
     let files = [];
     let currentFolder;
 
     const writeStream = new Transform({
       objectMode: true,
       async transform(file, encoding, callback) {
-        files.push({ fileName: file.fileName });
-        currentFolder = file.folder;
-        if (files.length === 1000) {
-          const collection = db.collection(currentFolder);
-          await collection.insertMany(files);
-          console.log(`1000 files stored! folder:${currentFolder}`);
-          console.log(`Total files stored: ${await collection.countDocuments()}`)
-          files = [];
+        if (file.folder === currentFolder) {
+          files.push({ fileName: file.fileName });
+        } else {
+          if (files.length > 0) {
+            const collection = db.collection(currentFolder);
+            await collection.insertMany(files);
+            console.log(`${files.length} files stored! folder:${currentFolder}`);
+            console.log(`Total files stored: ${await collection.countDocuments()}`);
+            files = [];
+          }
+          currentFolder = file.folder;
+          files.push({ fileName: file.fileName });
         }
         callback();
       },
@@ -36,7 +39,7 @@ async function storeFilesInDb(filePath) {
         const collection = db.collection(currentFolder);
         await collection.insertMany(files);
         console.log(`Remaining files stored! folder:${currentFolder}`);
-        console.log(`Total files stored: ${await collection.countDocuments()}`)
+        console.log(`Total files stored: ${await collection.countDocuments()}`);
         callback();
       },
     });
@@ -55,3 +58,4 @@ async function storeFilesInDb(filePath) {
 }
 
 storeFilesInDb('D:\\output\\results.json');
+
