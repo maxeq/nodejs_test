@@ -16,7 +16,11 @@
     "sparse-bitfield": "^3.0.3",
     "tr46": "^3.0.0",
     "webidl-conversions": "^7.0.0",
-    "whatwg-url": "^11.0.0"
+    "whatwg-url": "^11.0.0",
+    "json-stream": "^1.0.0",
+    "jsonstream": "^1.0.3",
+    "mongodb": "^5.0.0",
+    "threads": "^1.7.0"
   },
   "devDependencies": {},
   "scripts": {
